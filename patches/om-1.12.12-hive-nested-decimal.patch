@@ -1,0 +1,35 @@
+diff --git a/ingestion/src/metadata/ingestion/source/database/column_type_parser.py b/ingestion/src/metadata/ingestion/source/database/column_type_parser.py
+index 42c9f94..81254d4 100644
+--- a/ingestion/src/metadata/ingestion/source/database/column_type_parser.py
++++ b/ingestion/src/metadata/ingestion/source/database/column_type_parser.py
+@@ -443,6 +443,8 @@ class ColumnTypeParser:
+                     "dataType": ColumnTypeParser.get_column_type(match.group(0)),
+                     "dataTypeDisplay": dtype,
+                     "dataLength": int(match.group(3)),  # type: ignore
++                    "precision": int(match.group(3)),  # type: ignore
++                    "scale": int(match.group(4)),  # type: ignore
+                 }
+             return {
+                 "dataType": ColumnTypeParser.get_column_type(match.group(0)),
+diff --git a/ingestion/src/metadata/ingestion/source/database/hive/utils.py b/ingestion/src/metadata/ingestion/source/database/hive/utils.py
+index 9ea6724..b269a42 100644
+--- a/ingestion/src/metadata/ingestion/source/database/hive/utils.py
++++ b/ingestion/src/metadata/ingestion/source/database/hive/utils.py
+@@ -64,11 +64,14 @@ def get_columns(
+         charlen = re.search(r"\(([\d,]+)\)", col_raw_type.lower())
+         if charlen:
+             charlen = charlen.group(1)
+-            if attype == "decimal":
++            if any(col_type.startswith(prefix) for prefix in complex_data_types):
++                # For complex types the regex above matches the parameters of a nested
++                # type instead, e.g. array<struct<a:decimal(16,4)>> yields "16,4".
++                # The nested fields are resolved later from `system_data_type`.
++                args = []
++            elif attype == "decimal":
+                 prec, scale = charlen.split(",")
+                 args = (int(prec), int(scale))
+-            elif attype.startswith("struct"):
+-                args = []
+             else:
+                 args = (int(charlen),)
+             coltype = coltype(*args)

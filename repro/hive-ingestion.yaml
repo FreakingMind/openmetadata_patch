@@ -1,0 +1,26 @@
+source:
+  type: hive
+  serviceName: hive_test
+  serviceConnection:
+    config:
+      type: Hive
+      username: hive
+      hostPort: localhost:10000
+      auth: NONE
+  sourceConfig:
+    config:
+      type: DatabaseMetadata
+      includeTables: true
+      schemaFilterPattern:
+        includes:
+          - test_nested_types
+sink:
+  type: metadata-rest
+  config: {}
+workflowConfig:
+  loggerLevel: DEBUG
+  openMetadataServerConfig:
+    hostPort: http://localhost:8585/api
+    authProvider: openmetadata
+    securityConfig:
+      jwtToken: "<token>"

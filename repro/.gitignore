@@ -1,0 +1,4 @@
+jars/*.jar
+*.log
+.venv/
+__pycache__/
